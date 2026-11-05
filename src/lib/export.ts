@@ -105,13 +105,7 @@ export async function exportDocx(text: string, filename = "curriculo-otimizado.d
   });
   const doc = new Document({
     styles: { default: { document: { run: { font: "Calibri" } } } },
-    sections: { properties: {}, children } as never,
-  } as never);
-  // docx expects sections as an array
-  const real = new Document({
-    styles: { default: { document: { run: { font: "Calibri" } } } },
     sections: [{ properties: {}, children }],
   });
-  void doc;
-  download(await Packer.toBlob(real), filename);
+  download(await Packer.toBlob(doc), filename);
 }
