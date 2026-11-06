@@ -9,7 +9,7 @@ import { CATEGORY_LABELS } from "@/lib/score";
 import { Optimizer } from "./Optimizer";
 import { ScoreRing } from "./ScoreRing";
 
-const PRIORITY: Record<string, { label: string; variant: "warning" | "match" | "muted" }> = {
+const PRIORITY: Record<"alta" | "media" | "baixa", { label: string; variant: "warning" | "match" | "muted" }> = {
   alta: { label: "Alta prioridade", variant: "warning" },
   media: { label: "Média prioridade", variant: "match" },
   baixa: { label: "Baixa prioridade", variant: "muted" },

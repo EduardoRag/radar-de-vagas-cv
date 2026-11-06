@@ -145,7 +145,7 @@ function TextCard(props: {
   description: string;
   placeholder: string;
   value: string;
-  error?: string;
+  error?: string | undefined;
   register: ReturnType<ReturnType<typeof useForm<FormValues>>["register"]>;
   onClear: () => void;
 }) {

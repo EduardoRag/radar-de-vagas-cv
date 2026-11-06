@@ -32,7 +32,7 @@ export async function generateStructured<T>(opts: {
   system: string;
   prompt: string;
 }): Promise<T> {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new AiError("A integração de IA ainda não está configurada.", "config");
 
   const provider = createOpenAI({
