@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { AlertCircle, Eraser, Loader2, RotateCw, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertCircle, Eraser, Loader2, RotateCw, ShieldCheck, Sparkles, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -106,6 +106,7 @@ export function Analyzer() {
             error={form.formState.errors.resume?.message}
             register={form.register("resume")}
             onClear={() => form.setValue("resume", "", { shouldValidate: false })}
+            onFileText={(t) => form.setValue("resume", t.slice(0, LIMITS.max), { shouldValidate: true })}
           />
         </div>
         <div className="mt-8 flex flex-col items-center gap-3">
@@ -148,8 +149,29 @@ function TextCard(props: {
   error?: string | undefined;
   register: ReturnType<ReturnType<typeof useForm<FormValues>>["register"]>;
   onClear: () => void;
+  onFileText?: (text: string) => void;
 }) {
   const len = props.value?.length ?? 0;
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [reading, setReading] = useState(false);
+  const [fileMsg, setFileMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f || !props.onFileText) return;
+    setReading(true);
+    setFileMsg(null);
+    try {
+      const { extractResumeText } = await import("@/lib/extract-file");
+      const text = await extractResumeText(f);
+      props.onFileText(text);
+      setFileMsg({ ok: true, text: `Texto extraído de "${f.name}". Revise antes de analisar.` });
+    } catch (err) {
+      setFileMsg({ ok: false, text: err instanceof Error ? err.message : "Não foi possível ler o arquivo." });
+    } finally {
+      setReading(false);
+    }
+  };
   return (
     <Card className="bg-card/70">
       <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
@@ -159,11 +181,24 @@ function TextCard(props: {
           </CardTitle>
           <CardDescription id={`${props.id}-desc`}>{props.description}</CardDescription>
         </div>
-        <Button type="button" variant="ghost" size="sm" onClick={props.onClear} disabled={!len} aria-label={`Limpar ${props.title}`}>
-          <Eraser /> Limpar
-        </Button>
+        <div className="flex shrink-0 gap-1">
+          {props.onFileText && (
+            <>
+              <input ref={fileRef} type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="hidden" onChange={onFile} />
+              <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={reading}>
+                {reading ? <Loader2 className="animate-spin" /> : <Upload />} Enviar PDF/DOCX
+              </Button>
+            </>
+          )}
+          <Button type="button" variant="ghost" size="sm" onClick={props.onClear} disabled={!len} aria-label={`Limpar ${props.title}`}>
+            <Eraser /> Limpar
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
+        {fileMsg && (
+          <p className={`mb-2 text-xs ${fileMsg.ok ? "text-primary" : "text-destructive"}`} role="status">{fileMsg.text}</p>
+        )}
         <Textarea
           id={props.id}
           {...props.register}
